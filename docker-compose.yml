@@ -1,0 +1,63 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      pull: false
+      args:
+        APP_NAME: ${APP_NAME:-Gonely}
+        APP_VERSION: ${APP_VERSION:-0.0.0-local}
+    image: gonely:local
+    container_name: gonely-app
+    ports:
+      - ${FORWARD_PORT:-8080}:8080
+    env_file:
+      - path: .env
+        required: true
+    environment:
+      APP_PORT: 8080
+      APP_ENV: ${APP_ENV:-development}
+      APP_URL: ${APP_URL:-http://localhost:${FORWARD_PORT:-8080}}
+      BASE_PATH: ${BASE_PATH:-/api}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-secret}
+      DB_NAME: ${DB_NAME:-bunely}
+      DB_SSL_MODE: ${DB_SSL_MODE:-disable}
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production-min-32-chars}
+      JWT_EXPIRY: ${JWT_EXPIRY:-168h}
+      SESSION_EXPIRY: ${SESSION_EXPIRY:-7d}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:17.6-alpine
+    container_name: gonely-db
+    ports:
+      - ${FORWARD_DB_PORT:-5432}:5432
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-secret}
+      POSTGRES_DB: ${DB_NAME:-bunely}
+    volumes:
+      - ./tmp/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-bunely}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  default:
+    name: gonely-stack

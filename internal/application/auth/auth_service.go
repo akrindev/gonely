@@ -127,6 +127,34 @@ func (s *AuthService) Login(ctx context.Context, email, password, userAgent, ipA
 
 // ValidateToken validates a JWT token and returns the session
 func (s *AuthService) ValidateToken(ctx context.Context, tokenString string) (*auth.Session, error) {
+	// First, validate the JWT token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Validate the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(s.config.Auth.JWTSecret), nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("invalid token: %w", err)
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("token is not valid")
+	}
+
+	// Extract claims
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, fmt.Errorf("invalid token claims")
+	}
+
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("user_id not found in token")
+	}
+
 	// Find session by token
 	session, err := s.sessionRepo.FindByToken(ctx, tokenString)
 	if err != nil {
@@ -134,6 +162,11 @@ func (s *AuthService) ValidateToken(ctx context.Context, tokenString string) (*a
 	}
 	if session == nil {
 		return nil, fmt.Errorf("session not found")
+	}
+
+	// Verify the session belongs to the correct user
+	if session.UserID != userID {
+		return nil, fmt.Errorf("session user mismatch")
 	}
 
 	// Check if session is valid
@@ -158,6 +191,19 @@ func (s *AuthService) Logout(ctx context.Context, tokenString string) error {
 	if err != nil || session == nil {
 		return fmt.Errorf("session not found")
 	}
+
+	session.Revoke("user logout")
+	if err := s.sessionRepo.Update(ctx, session); err != nil {
+		s.logger.Error("Failed to revoke session", zap.Error(err))
+		return fmt.Errorf("failed to revoke session: %w", err)
+	}
+
+	return nil
+}
+
+// RevokeSession revokes a session by session object
+func (s *AuthService) RevokeSession(ctx context.Context, session *auth.Session) error {
+	s.logger.Info("Revoking session", zap.String("session_id", session.ID))
 
 	session.Revoke("user logout")
 	if err := s.sessionRepo.Update(ctx, session); err != nil {

@@ -1,4 +1,4 @@
-basePath: /api/v1
+basePath: /api
 definitions:
   dto.CreateCommentRequest:
     properties:
@@ -359,7 +359,7 @@ paths:
       - posts
 securityDefinitions:
   BearerAuth:
-    description: Type "Bearer" followed by a space and JWT token.
+    description: JWT Authorization header using the Bearer scheme.
     in: header
     name: Authorization
     type: apiKey

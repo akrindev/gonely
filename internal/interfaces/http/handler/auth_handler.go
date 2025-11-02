@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/akrindev/gonely/internal/application/auth"
+	authDomain "github.com/akrindev/gonely/internal/domain/auth"
 	"github.com/akrindev/gonely/internal/interfaces/http/dto"
 	pkgerrors "github.com/akrindev/gonely/pkg/errors"
 	"github.com/gin-gonic/gin"
@@ -112,18 +113,22 @@ func (h *AuthHandler) CreateAnonymous(c *gin.Context) {
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router			/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
-	token := c.GetHeader("Authorization")
-	if token == "" {
-		c.Error(pkgerrors.BadRequest("Missing authorization header"))
+	// Get the session from context (already validated by middleware)
+	session, exists := c.Get("session")
+	if !exists {
+		c.Error(pkgerrors.InternalError("Session not found in context"))
 		return
 	}
 
-	// Remove "Bearer " prefix
-	if len(token) > 7 {
-		token = token[7:]
+	authSession, ok := session.(*authDomain.Session)
+	if !ok {
+		c.Error(pkgerrors.InternalError("Invalid session type"))
+		return
 	}
 
-	if err := h.authService.Logout(c.Request.Context(), token); err != nil {
+	// Revoke the session
+	authSession.Revoke("user logout")
+	if err := h.authService.RevokeSession(c.Request.Context(), authSession); err != nil {
 		c.Error(pkgerrors.InternalError(err.Error()))
 		return
 	}

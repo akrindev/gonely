@@ -76,11 +76,17 @@ docker-logs: ## Show docker logs
 docker-logs-staging: ## Show staging docker logs
 	@docker-compose -f docker-compose.staging.yml logs -f
 
+swagger: ## Generate swagger documentation
+	@echo "Generating swagger docs..."
+	@swag init -g cmd/api/main.go -o docs
+	@echo "Swagger documentation generated successfully"
+
 install-tools: ## Install development tools
 	@echo "Installing tools..."
 	@go install github.com/air-verse/air@latest
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	@go install golang.org/x/tools/cmd/goimports@latest
+	@go install github.com/swaggo/swag/cmd/swag@latest
 
 db-reset: ## Reset database (drop and recreate)
 	@echo "Resetting database..."

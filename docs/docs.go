@@ -555,7 +555,7 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "BearerAuth": {
-            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "description": "JWT Authorization header using the Bearer scheme.",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
@@ -567,7 +567,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-	BasePath:         "/api/v1",
+	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Gonely API",
 	Description:      "A social media API built with Go and Gin",

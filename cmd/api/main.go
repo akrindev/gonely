@@ -13,12 +13,12 @@
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 //
 //	@host		localhost:8080
-//	@BasePath	/api/v1
+//	@BasePath	/api
 //
-//	@securityDefinitions.apikey	BearerAuth
+//	@securityDefinitions.apikey BearerAuth
+//	@description				JWT Authorization header using the Bearer scheme.
 //	@in							header
 //	@name						Authorization
-//	@description				Type "Bearer" followed by a space and JWT token.
 package main
 
 import (
@@ -31,6 +31,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/akrindev/gonely/docs"
 	authApp "github.com/akrindev/gonely/internal/application/auth"
 	feedsApp "github.com/akrindev/gonely/internal/application/feeds"
 	"github.com/akrindev/gonely/internal/infrastructure/config"

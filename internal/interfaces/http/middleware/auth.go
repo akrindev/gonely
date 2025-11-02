@@ -30,16 +30,14 @@ func AuthMiddleware(authService *auth.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		// Extract token
-		if !strings.HasPrefix(authHeader, BearerPrefix) {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, dto.NewErrorResponse(
-				"UNAUTHORIZED",
-				"Invalid authorization header format",
-			))
-			return
+		// Extract token - support both "Bearer <token>" and just "<token>" formats
+		var token string
+		if strings.HasPrefix(authHeader, BearerPrefix) {
+			token = strings.TrimPrefix(authHeader, BearerPrefix)
+		} else {
+			// Assume the entire header value is the token (for Swagger UI compatibility)
+			token = authHeader
 		}
-
-		token := strings.TrimPrefix(authHeader, BearerPrefix)
 
 		// Validate token
 		session, err := authService.ValidateToken(c.Request.Context(), token)

@@ -9,6 +9,8 @@ import (
 	"github.com/akrindev/gonely/internal/interfaces/http/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // SetupRouter sets up the HTTP router with all routes
@@ -50,6 +52,9 @@ func SetupRouter(
 			"service": cfg.App.Name,
 		})
 	})
+
+	// Swagger routes
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// API routes
 	api := router.Group(cfg.App.BasePath)

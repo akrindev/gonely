@@ -20,6 +20,15 @@ func NewAuthHandler(authService *auth.AuthService) *AuthHandler {
 }
 
 // Register handles POST /auth/register
+// @Summary		Register a new user
+// @Description	Register a new user with name, email and password
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Param			request	body		dto.RegisterRequest	true	"User registration data"
+// @Success		201		{object}	dto.Response
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -37,6 +46,16 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 // Login handles POST /auth/login
+// @Summary		Login user
+// @Description	Authenticate user with email and password
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Param			request	body		dto.LoginRequest	true	"User login credentials"
+// @Success		200		{object}	dto.Response
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		401		{object}	dto.ErrorResponse
+// @Router			/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -60,6 +79,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // CreateAnonymous handles POST /auth/anonymous
+// @Summary		Create anonymous user
+// @Description	Create a new anonymous user session
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Success		201	{object}	dto.Response
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/auth/anonymous [post]
 func (h *AuthHandler) CreateAnonymous(c *gin.Context) {
 	user, token, err := h.authService.CreateAnonymousUser(c.Request.Context())
 	if err != nil {
@@ -74,6 +101,16 @@ func (h *AuthHandler) CreateAnonymous(c *gin.Context) {
 }
 
 // Logout handles POST /auth/logout
+// @Summary		Logout user
+// @Description	Invalidate the current user session
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Success		200	{object}	map[string]string
+// @Failure		400	{object}	dto.ErrorResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if token == "" {
@@ -95,6 +132,15 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 // Me handles GET /auth/me
+// @Summary		Get current user
+// @Description	Get information about the currently authenticated user
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Success		200	{object}	dto.Response
+// @Failure		401	{object}	dto.ErrorResponse
+// @Router			/auth/me [get]
 func (h *AuthHandler) Me(c *gin.Context) {
 	user, exists := c.Get("user")
 	if !exists {
